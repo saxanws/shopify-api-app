@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx tsc",
+    "prestart": "npm run build",
+    "start": "node build/index.js"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +16,10 @@
     "@shopify/shopify-api": "^3.1.0",
     "dotenv": "^16.0.1",
     "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.0.6",
+    "typescript": "^4.7.4"
   }
 }
