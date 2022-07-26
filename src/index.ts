@@ -7,6 +7,7 @@ import * as dotenv from "dotenv";
 require('dotenv').config();
 
 
+
 // dotenv.config();
 
 const host = '127.0.0.1';
@@ -28,12 +29,6 @@ const S_K: string = API_KEY+"";
 
 const shops: { [key: string]: string | undefined } = {};
     
-// Shopify.Context.initialize({
-//     API_KEY: API_KEY + "",
-//     API_SECRET_KEY: `${API_SECRET_KEY}`,
-//     SCOPES: [`${SCOPES}`],
-//     IS_EMBEDDED_APP:false
-// })
 
 Shopify.Context.initialize({
     API_KEY,
@@ -45,34 +40,29 @@ Shopify.Context.initialize({
 });
 
 const app = express();
-// app.use(bodyparser.urlencoded({extended: true}))
 
-// Point 
-app.get('/', async (req: any, res: Response) => {
+// Point of entry to start the auth when installing the app
+app.get('/shopify', async (req: any, res: Response) => {
     console.log(shops[req.query.shop]);
     if(typeof shops[req.query.shop] !== 'undefined') {
-        // res.send(HOST);
-        // res.redirect("https://www.facebook.com/axan.similien/");
-        res.redirect(`/auth?shop=${req.query.shop}`);
+        res.redirect(`/shopify/auth?shop=${req.query.shop}`);
     } else {
         console.log(req.query.shop);
-        res.redirect(`/auth?shop=${req.query.shop}`)
-        // res.redirect(`/auth?shop=axan-actiontrak`)
+        res.redirect(`/shopify/auth?shop=${req.query.shop}`)
     }
     
 });
 
-app.get('/auth', async (req:Request, res: Response) => {
-    // console.log(req)
+app.get('/shopify/auth', async (req:Request, res: Response) => {
 
-    const authRoute = await Shopify.Auth.beginAuth(req, res, req.query.shop as string, '/auth/callback', false);
+    const authRoute = await Shopify.Auth.beginAuth(req, res, req.query.shop as string, '/shopify/auth/callback', false);
 
     console.log(authRoute);
     
     return res.redirect(authRoute);
 });
 
-app.get('/auth/callback', async (req:any, res: Response) => {
+app.get('/shopify/auth/callback', async (req:any, res: Response) => {
     try {
         const shopSession:any = await Shopify.Auth.validateAuthCallback(req, res, req.query);
         console.log(shopSession);
@@ -83,11 +73,6 @@ app.get('/auth/callback', async (req:any, res: Response) => {
 
     res.redirect("https://www.facebook.com/axan.similien/");
 });
-
-// app.get('/products', async (req, res) => {
-   
-//         res.status(200).send("hi there");
-// })
 
 
 app.listen(port, () => {
