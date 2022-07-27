@@ -1,35 +1,17 @@
 import express, {Application, Request, Response} from "express";
-// import dotenv from 'dotenv';
 import Shopify, {ApiVersion} from '@shopify/shopify-api';
 import bodyparser from 'body-parser';
 import * as dotenv from "dotenv";
-// dotenv.config({ path: '/.env' });
-require('dotenv').config();
+import AuthMiddleWare from './shopify/middlewares/auth';
 
 
+// Configure to set up the environement variables
+dotenv.config();
 
-// dotenv.config();
+// Get all the environement variable
+const {API_SECRET_KEY, SCOPES, HOST, TOKEN, SHOP,API_KEY, LOCAL_HOST, PORT, FRONT_END_APP } = process.env;
 
-const host = '127.0.0.1';
-const port = 3000;
-
-interface AuthQuery {
-    code: string;
-    timestamp: string;
-    state: string;
-    shop: string;
-    host?: string;
-    hmac?: string;
-  }
-
-const {API_SECRET_KEY, SCOPES, HOST, TOKEN, SHOP,API_KEY, HOST_SCHEME } = process.env;
-
-const API_K: string = API_KEY+"";
-const S_K: string = API_KEY+"";
-
-const shops: { [key: string]: string | undefined } = {};
-    
-
+// Set up the context of shopify
 Shopify.Context.initialize({
     API_KEY,
     API_SECRET_KEY,
@@ -39,42 +21,16 @@ Shopify.Context.initialize({
     API_VERSION: ApiVersion.April22
 });
 
+// Initialize express app
 const app = express();
 
-// Point of entry to start the auth when installing the app
-app.get('/shopify', async (req: any, res: Response) => {
-    console.log(shops[req.query.shop]);
-    if(typeof shops[req.query.shop] !== 'undefined') {
-        res.redirect(`/shopify/auth?shop=${req.query.shop}`);
-    } else {
-        console.log(req.query.shop);
-        res.redirect(`/shopify/auth?shop=${req.query.shop}`)
-    }
-    
-});
+app.set('front_end_url', FRONT_END_APP);
 
-app.get('/shopify/auth', async (req:Request, res: Response) => {
-
-    const authRoute = await Shopify.Auth.beginAuth(req, res, req.query.shop as string, '/shopify/auth/callback', false);
-
-    console.log(authRoute);
-    
-    return res.redirect(authRoute);
-});
-
-app.get('/shopify/auth/callback', async (req:any, res: Response) => {
-    try {
-        const shopSession:any = await Shopify.Auth.validateAuthCallback(req, res, req.query);
-        console.log(shopSession);
-        shops[shopSession.shop] = shopSession;
-    } catch (e) {
-        console.error(e);
-    }  
-
-    res.redirect("https://www.facebook.com/axan.similien/");
-});
+// this is to apply all the auth process
+AuthMiddleWare(app);
 
 
-app.listen(port, () => {
-    console.log(`Server running at http://${host}:${port}/`);
+// Start the app on the specified PORT
+app.listen(PORT, () => {
+    console.log(`Server running at http://${LOCAL_HOST}:${PORT}/`);
 });
